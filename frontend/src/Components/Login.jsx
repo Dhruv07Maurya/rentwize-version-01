@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const containerRef = useRef(null);
@@ -8,6 +9,8 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -26,9 +29,30 @@ function Login() {
     };
   }, []);
 
-  const handleSignIn = (e) => {
+  //handles login 
+  const handleSignIn = async (e) => {
     e.preventDefault();
     console.log("Sign In - Email:", email, "Password:", password);
+    try{
+      const response = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password}),
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+
+      const result = await response.json();
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user)); 
+      navigate("/products", { state: { name: result.username } });
+
+    } catch {
+      console.error("Error submitting form:", error.message);
+      alert("Login failed. Please try again.");
+
+    }
   };
 
   const handleSignUp = (e) => {

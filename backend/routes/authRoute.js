@@ -27,7 +27,7 @@ authRouter.post('/register', async (req, res) => {
     }
 
     try{
-        const userExists = await User.find({
+        const userExists = await User.findOne({
             email
         });
         if(userExists){
@@ -49,26 +49,40 @@ authRouter.post('/register', async (req, res) => {
 })
 
 authRouter.post('/login', async (req, res) => {
+
     const { email , password } = req.body;
+
     try{
         loginSchema.parse({email , password});
     }catch(err){
         return res.status(400).json({message:"Invalid Data"});
     }
+
     try{
         const user = await User.findOne({
             email
-        });        
+        });   
+
         if(!user){
             return res.status(400).json({message:"User does not exist"});
         }
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
+
         if(!isPasswordValid){
             return res.status(400).json({message:"Invalid Password"});
         }
+
         const token = jwt.sign({email}, process.env.JWT_SECRET);
-        return res.status(200).json({message:"User logged in", token});
+
+        console.log(user);
+        return res.status(200).json({
+            message: "User logged in",
+            token,
+            username: user.name
+        });
     }catch(err){
+        console.error("Server Error:", err);
         return res.status(500).json({message:"Internal Server Error"});
     }
 });
